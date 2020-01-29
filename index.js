@@ -1,5 +1,6 @@
 const http = require('http');
 const express = require('express');
+const bodyParser = require('body-parser');
 const socketio = require('socket.io');
 const cors = require('cors');
 const uuid = require('uuid/v1');
@@ -10,8 +11,17 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 io.on('connect', (socket) => {
   console.log(`${socket.id} connected`);
+
+  socket.emit('reduxActionReceived', {
+    type: 'roomInfo/REC_CREATE_ROOM',
+    rooms: getRooms(),
+  });
+
   socket.on('createRoom', user => {
     const roomId = uuid();
     socket.join(roomId);
