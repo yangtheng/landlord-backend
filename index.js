@@ -18,7 +18,7 @@ io.on('connect', (socket) => {
   console.log(`${socket.id} connected`);
 
   socket.emit('reduxActionReceived', {
-    type: 'roomInfo/REC_CREATE_ROOM',
+    type: 'roomInfo/REC_GET_ROOMS',
     rooms: getRooms(),
   });
 
@@ -27,8 +27,14 @@ io.on('connect', (socket) => {
     socket.join(roomId);
     createRoom(roomId, socket.id, user);
     console.log(`room ${roomId} created`);
+    socket.emit('reduxActionReceived', {
+      type: 'roomInfo/REC_CREATOR_JOIN',
+      roomId,
+      user,
+      users: getRoom(roomId).users,
+    });
     io.emit('reduxActionReceived', {
-      type: 'roomInfo/REC_CREATE_ROOM',
+      type: 'roomInfo/REC_GET_ROOMS',
       rooms: getRooms(),
     });
   })
@@ -39,17 +45,25 @@ io.on('connect', (socket) => {
     console.log(`${socket.id} connected to ${roomId}`);
     io.to(roomId).emit('reduxActionReceived', {
       type: 'roomInfo/REC_USER_JOIN',
-      users: getRoom().users,
+      users: getRoom(roomId).users,
+    });
+    io.emit('reduxActionReceived', {
+      type: 'roomInfo/REC_GET_ROOMS',
+      rooms: getRooms(),
     });
   });
 
-  socket.on('leaveRoom', ({ user, roomId }) => {
+  socket.on('leaveRoom', (roomId) => {
     socket.leave(roomId);
     leaveRoom(roomId, socket.id)
     console.log(`${socket.id} left ${roomId}`);
     socket.broadcast.to(roomId).emit('reduxActionReceived', {
       type: 'roomInfo/REC_USER_LEAVE',
-      users: getRoom().users,
+      users: getRoom(roomId).users,
+    });
+    io.emit('reduxActionReceived', {
+      type: 'roomInfo/REC_GET_ROOMS',
+      rooms: getRooms(),
     });
   });
 
@@ -58,7 +72,11 @@ io.on('connect', (socket) => {
     console.log(`${socket.id} disconnected`);
     socket.broadcast.to(roomId).emit('reduxActionReceived', {
       type: 'roomInfo/REC_USER_LEAVE',
-      users: getRoom().users,
+      users: getRoom(roomId).users,
+    });
+    io.emit('reduxActionReceived', {
+      type: 'roomInfo/REC_GET_ROOMS',
+      rooms: getRooms(),
     });
   })
 

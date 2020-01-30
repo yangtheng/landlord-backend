@@ -40,8 +40,10 @@ const joinRoom = (roomId, socketId, user) => {
 };
 
 const leaveRoom = (roomId, socketId) => {
+  let roomIsEmpty = false;
   rooms = rooms.map(room => {
     if (room.roomId === roomId) {
+      if (!room.users.filter(roomUser => socketId !== roomUser.socketId).length) roomIsEmpty = true;
       return {
         ...room,
         ...{
@@ -52,15 +54,18 @@ const leaveRoom = (roomId, socketId) => {
       return room;
     }
   });
+  if (roomIsEmpty) rooms = rooms.filter(room => room.roomId !== roomId);
 };
 
 const disconnect = socketId => {
   let roomId;
+  let roomIsEmpty = false;
   rooms = rooms.map(room => {
-    if (room.users.indexOf(user => user.socketId === socketId) === -1) {
+    if (room.users.findIndex(user => user.socketId === socketId) === -1) {
       return room;
     }
     roomId = room.roomId;
+    if (!room.users.filter(roomUser => socketId !== roomUser.socketId).length) roomIsEmpty = true;
     return {
       ...room,
       ...{
@@ -68,6 +73,7 @@ const disconnect = socketId => {
       },
     };
   });
+  if (roomIsEmpty) rooms = rooms.filter(room => room.roomId !== roomId);
   return roomId;
 };
 
