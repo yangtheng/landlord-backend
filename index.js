@@ -6,6 +6,7 @@ const cors = require('cors');
 const uuid = require('uuid/v1');
 
 const { createRoom, joinRoom, leaveRoom, disconnect, getRoom, getRooms } = require('./rooms');
+const { shuffleDeckInto3Piles } = require('./cards');
 
 const app = express();
 const server = http.createServer(app);
@@ -80,9 +81,22 @@ io.on('connect', (socket) => {
     });
   })
 
+  socket.on('startGame', (users) => {
+    const cards = shuffleDeckInto3Piles();
+    const activePlayer = Math.floor(Math.random() * Math.floor(3));
+    users.forEach(({ socketId }, i) => {
+      io.to(socketId).emit('reduxActionReceived', {
+        type: 'game/REC_START_GAME',
+        myCards: cards[i],
+        activePlayer,
+        playerNum: i,
+      })
+    })
+  })
+
   socket.on('reduxActionSent', (action) => {
     console.log('received Action');
-    io.to(action.roomId).emit('reduxActionReceived', action);
+    io.in(action.roomId).emit('reduxActionReceived', action);
   });
 });
 
