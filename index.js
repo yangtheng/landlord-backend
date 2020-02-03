@@ -5,7 +5,7 @@ const socketio = require('socket.io');
 const cors = require('cors');
 const uuid = require('uuid/v1');
 
-const { createRoom, joinRoom, leaveRoom, disconnect, getRoom, getRooms } = require('./rooms');
+const { createRoom, joinRoom, leaveRoom, disconnect, getRoom, getRooms, setLeftovers, getLeftovers } = require('./rooms');
 const { shuffleDeckInto3Piles } = require('./cards');
 
 const app = express();
@@ -81,16 +81,26 @@ io.on('connect', (socket) => {
     });
   })
 
-  socket.on('startGame', (users) => {
-    const cards = shuffleDeckInto3Piles();
+  socket.on('startGame', ({ users, roomId }) => {
+    const { hands, leftovers } = shuffleDeckInto3Piles();
+    setLeftovers(leftovers, roomId);
     const activePlayer = Math.floor(Math.random() * Math.floor(3));
     users.forEach(({ socketId }, i) => {
       io.to(socketId).emit('reduxActionReceived', {
         type: 'game/REC_START_GAME',
-        myCards: cards[i],
+        myCards: hands[i],
         activePlayer,
         playerNum: i,
       })
+    })
+  })
+
+  socket.on('bidEnd', ({ landlord, roomId }) => {
+    const leftovers = getLeftovers(roomId);
+    io.in(roomId).emit('reduxActionReceived', {
+      type: 'game/REC_BID_END',
+      landlord,
+      leftovers,
     })
   })
 

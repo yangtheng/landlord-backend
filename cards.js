@@ -26,11 +26,14 @@ const shuffleDeckInto3Piles = () => {
   ];
 
   const shuffledDeck = shuffle(deck);
-  return [
-    sort(shuffledDeck.slice(0, 17), types),
-    sort(shuffledDeck.slice(17, 34), types),
-    sort(shuffledDeck.slice(34, 51), types),
-  ];
+  return {
+    hands: [
+      sort(shuffledDeck.slice(0, 17), types),
+      sort(shuffledDeck.slice(17, 34), types),
+      sort(shuffledDeck.slice(34, 51), types),
+    ],
+    leftovers: sort(shuffledDeck.slice(51), types),
+  }
 };
 
 const shuffle = (deck) => {

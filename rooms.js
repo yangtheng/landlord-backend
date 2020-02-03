@@ -81,4 +81,16 @@ const getRoom = roomId => rooms.filter(room => room.roomId === roomId)[0] || [];
 
 const getRooms = () => rooms;
 
-module.exports = { createRoom, joinRoom, leaveRoom, disconnect, getRoom, getRooms };
+const setLeftovers = (cards, roomId) => {
+  rooms = rooms.map(room => {
+    if (room.roomId !== roomId) return room;
+    return {
+      ...room,
+      leftovers: cards,
+    }
+  })
+}
+
+const getLeftovers = roomId => rooms.filter(room => room.roomId === roomId)[0].leftovers;
+
+module.exports = { createRoom, joinRoom, leaveRoom, disconnect, getRoom, getRooms, setLeftovers, getLeftovers };
